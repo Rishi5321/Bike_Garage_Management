@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Monthly Revenue Report</h2>
+    <a href="/" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+</div>
+
+{% if monthly %}
+
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Month</label>
+                <select id="search-month" class="form-select">
+                    <option value="">-- All Months --</option>
+                    {% for m in monthly %}
+                    <option value="{{ m.month }}">
+                        {{ month_names[m.month] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Year</label>
+                <select id="search-year" class="form-select">
+                    <option value="">-- All Years --</option>
+                    {% for m in monthly %}
+                    <option value="{{ m.year }}">{{ m.year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="resetFilters()"
+                        class="btn btn-secondary w-100">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Showing <span id="result-count">{{ monthly|length }}</span>
+                of {{ monthly|length }} records
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-center border-0 bg-primary text-white">
+            <div class="card-body">
+                <h3 class="fw-bold">
+                    ₹{{ monthly|sum(attribute='total_revenue') }}
+                </h3>
+                <p class="mb-0">Total Revenue (All Time)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center border-0 bg-success text-white">
+            <div class="card-body">
+                <h3 class="fw-bold">
+                    {{ monthly|sum(attribute='total_bills') }}
+                </h3>
+                <p class="mb-0">Total Bills Paid</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center border-0 bg-info text-white">
+            <div class="card-body">
+                <h3 class="fw-bold">
+                    {{ monthly|length }}
+                </h3>
+                <p class="mb-0">Active Months</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <strong>Monthly Revenue Chart</strong>
+    </div>
+    <div class="card-body">
+        <div style="position:relative;height:300px;">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <strong>Month by Month Breakdown</strong>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Month</th>
+                    <th>Year</th>
+                    <th>Total Bills</th>
+                    <th>Revenue</th>
+                    <th>Avg per Bill</th>
+                </tr>
+            </thead>
+            <tbody  id="monthly-body">
+                {% for m in monthly %}
+                <tr class="monthly-row
+                        data-month="{{ m.month }}"
+                          data-year="{{ m.year }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ month_names[m.month] }}</td>
+                    <td>{{ m.year }}</td>
+                    <td>{{ m.total_bills }}</td>
+                    <td>₹{{ m.total_revenue }}</td>
+                    <td>₹{{ (m.total_revenue / m.total_bills)|round(2) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th>{{ monthly|sum(attribute='total_bills') }}</th>
+                    <th>₹{{ monthly|sum(attribute='total_revenue') }}</th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+    const labels  = [
+        {% for m in monthly|reverse %}
+            "{{ month_names[m.month] }} {{ m.year }}",
+        {% endfor %}
+    ];
+    const revenue = [
+        {% for m in monthly|reverse %}
+            {{ m.total_revenue }},
+        {% endfor %}
+    ];
+    const bills = [
+        {% for m in monthly|reverse %}
+            {{ m.total_bills }},
+        {% endfor %}
+    ];
+
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label           : 'Revenue (₹)',
+                    data            : revenue,
+                    backgroundColor : '#2E4057',
+                    borderRadius    : 6,
+                    yAxisID         : 'y'
+                },
+                {
+                    label           : 'Bills',
+                    data            : bills,
+                    backgroundColor : '#534AB7',
+                    borderRadius    : 6,
+                    yAxisID         : 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive          : true,
+            maintainAspectRatio : false,
+            plugins: {
+                legend: { position: 'top' }
+            },
+            scales: {
+                y: {
+                    beginAtZero : true,
+                    position    : 'left',
+                    ticks: {
+                        callback: value => '₹' + value
+                    }
+                },
+                y1: {
+                    beginAtZero : true,
+                    position    : 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+{% else %}
+<div class="alert alert-info">
+    No revenue data yet. Generate and pay some bills first!
+</div>
+{% endif %}
+
+{% endblock %}

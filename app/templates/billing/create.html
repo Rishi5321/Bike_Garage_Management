@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4">Create Bill</h2>
+
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">Service Details</div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr><th>Customer</th><td>{{ service.bike.customer.name }}</td></tr>
+                    <tr><th>Bike</th><td>{{ service.bike.bike_number }} — {{ service.bike.bike_model }}</td></tr>
+                    <tr><th>Service</th><td>{{ service.service_type }}</td></tr>
+                    <tr><th>Service Cost</th><td>₹{{ service.cost }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <form method="POST">
+            <h5 class="mb-3">Add Spare Parts Used</h5>
+            <div id="parts-container">
+                <div class="row mb-2 part-row">
+                    <div class="col-md-7">
+                        <select name="part_id" class="form-select">
+                            <option value="">-- Select Part (optional) --</option>
+                            {% for p in parts %}
+                            <option value="{{ p.id }}">{{ p.name }} — ₹{{ p.price }} (Stock: {{ p.stock }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" name="quantity" class="form-control"
+                               placeholder="Qty" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" onclick="addPartRow()"
+                                class="btn btn-outline-primary w-100">+ Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">Generate Bill</button>
+            <a href="/services" class="btn btn-secondary w-100 mt-2">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+function addPartRow() {
+    const container = document.getElementById('parts-container');
+    const firstRow  = container.querySelector('.part-row');
+    const newRow    = firstRow.cloneNode(true);
+    newRow.querySelector('select').value = '';
+    newRow.querySelector('input').value  = '1';
+    newRow.querySelector('button').textContent = 'Remove';
+    newRow.querySelector('button').onclick = function() { newRow.remove(); };
+    container.appendChild(newRow);
+}
+</script>
+
+{% endblock %}

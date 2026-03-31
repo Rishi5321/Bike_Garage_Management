@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Daily Revenue History</h2>
+    <a href="/" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+</div>
+
+{% if daily_revenue %}
+
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Date</label>
+                <input type="date" id="search-date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Month</label>
+                <input type="month" id="search-month" class="form-control">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="resetFilters()"
+                        class="btn btn-secondary w-100">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Showing <span id="result-count">{{ daily_revenue|length }}</span>
+                of {{ daily_revenue|length }} records
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <strong>Daily Revenue Chart</strong>
+    </div>
+    <div class="card-body">
+        <div style="position:relative;height:300px;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <strong>Day by Day Breakdown</strong>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Total Bills</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody id="revenue-body">
+                {% for r in daily_revenue %}
+                <tr class="revenue-row"
+                    data-date="{{ r.date }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.total_bills }}</td>
+                    <td>₹{{ r.total_revenue }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark" id="revenue-footer">
+                <tr>
+                    <th colspan="2">Total</th>
+                    <th id="footer-bills">
+                        {{ daily_revenue|sum(attribute='total_bills') }}
+                    </th>
+                    <th id="footer-revenue">
+                        ₹{{ daily_revenue|sum(attribute='total_revenue') }}
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- No results -->
+        <div id="no-results" class="alert alert-info m-3" style="display:none;">
+            No records found for selected filter!
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+    const allLabels  = {{ daily_revenue|map(attribute='date')|list|tojson }};
+    const allRevenue = {{ daily_revenue|map(attribute='total_revenue')|list|tojson }};
+
+    const chartLabels  = [...allLabels].reverse();
+    const chartRevenue = [...allRevenue].reverse();
+
+    const chart = new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label           : 'Daily Revenue (₹)',
+                data            : chartRevenue,
+                backgroundColor : '#2E4057',
+                borderRadius    : 6,
+            }]
+        },
+        options: {
+            responsive          : true,
+            maintainAspectRatio : false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: value => '₹' + value }
+                }
+            }
+        }
+    });
+
+    const dateInput   = document.getElementById('search-date');
+    const monthInput  = document.getElementById('search-month');
+    const resultCount = document.getElementById('result-count');
+    const noResults   = document.getElementById('no-results');
+    const footerBills = document.getElementById('footer-bills');
+    const footerRev   = document.getElementById('footer-revenue');
+
+    function filterRevenue() {
+        const dateQuery  = dateInput.value.trim();
+        const monthQuery = monthInput.value.trim();
+        const rows       = document.querySelectorAll('.revenue-row');
+
+        let visibleCount    = 0;
+        let totalBills      = 0;
+        let totalRevenue    = 0;
+        let chartLabelsNew  = [];
+        let chartRevenueNew = [];
+
+        rows.forEach(row => {
+            const date  = row.getAttribute('data-date');
+            const month = date.substring(0, 7);
+
+            const dateMatch  = dateQuery  === '' || date  === dateQuery;
+            const monthMatch = monthQuery === '' || month === monthQuery;
+
+            if (dateMatch && monthMatch) {
+                row.style.display = '';
+                visibleCount++;
+                totalBills   += parseInt(row.cells[2].textContent);
+                totalRevenue += parseFloat(
+                    row.cells[3].textContent.replace('₹', '')
+                );
+                chartLabelsNew.push(date);
+                chartRevenueNew.push(
+                    parseFloat(row.cells[3].textContent.replace('₹', ''))
+                );
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        resultCount.textContent  = visibleCount;
+        footerBills.textContent  = totalBills;
+        footerRev.textContent    = '₹' + totalRevenue.toFixed(2);
+        noResults.style.display  = visibleCount === 0 ? 'block' : 'none';
+
+        chart.data.labels   = chartLabelsNew.reverse();
+        chart.data.datasets[0].data = chartRevenueNew.reverse();
+        chart.update();
+    }
+
+    function resetFilters() {
+        dateInput.value  = '';
+        monthInput.value = '';
+        filterRevenue();
+    }
+
+    dateInput.addEventListener('change',  filterRevenue);
+    monthInput.addEventListener('change', filterRevenue);
+</script>
+
+{% else %}
+<div class="alert alert-info">
+    No revenue history yet. Generate and pay some bills first!
+</div>
+{% endif %}
+
+{% endblock %}

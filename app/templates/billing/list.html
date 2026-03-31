@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Bills</h2>
+</div>
+
+{% if bills %}
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Bill ID</th>
+            <th>Customer</th>
+            <th>Bike</th>
+            <th>Service</th>
+            <th>Total (₹)</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for b in bills %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>#{{ b.id }}</td>
+            <td>{{ b.service.bike.customer.name }}</td>
+            <td>{{ b.service.bike.bike_number }}</td>
+            <td>{{ b.service.service_type }}</td>
+            <td>₹{{ b.total_amount }}</td>
+            <td>
+                {% if b.paid %}
+                    <span class="badge bg-success">Paid</span>
+                {% else %}
+                    <span class="badge bg-danger">Unpaid</span>
+                {% endif %}
+            </td>
+            <td>{{ b.created_at.strftime('%d-%m-%Y') }}</td>
+            <td>
+                <a href="/billing/{{ b.id }}" class="btn btn-sm btn-info">View</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No bills yet!</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2 class="mb-1">AI Fault Detection</h2>
+        <p class="text-muted mb-4">Describe the bike problem and AI will suggest possible causes.</p>
+
+        <form method="POST" class="mb-4">
+            <div class="mb-3">
+                <label class="form-label">Describe the Problem</label>
+                <textarea name="problem" class="form-control" rows="3"
+                          placeholder="e.g. Bike making noise while braking..."
+                          required>{{ problem or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                Analyse Problem
+            </button>
+        </form>
+
+        {% if result %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header
+                {% if result.urgency == 'high' %}bg-danger
+                {% elif result.urgency == 'medium' %}bg-warning
+                {% elif result.urgency == 'low' %}bg-success
+                {% else %}bg-secondary
+                {% endif %} text-white">
+                <strong>
+                    {% if result.urgency == 'high' %}Urgent —
+                    {% elif result.urgency == 'medium' %}Moderate —
+                    {% elif result.urgency == 'low' %}Minor —
+                    {% endif %}
+                    AI Diagnosis Result
+                </strong>
+            </div>
+            <div class="card-body">
+                <h6 class="mb-2">Possible Issues:</h6>
+                <ul class="mb-3">
+                    {% for issue in result.issues %}
+                    <li>{{ issue }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h6 class="mb-2">Recommended Action:</h6>
+                <p class="text-muted">{{ result.action }}</p>
+
+                {% if result.urgency == 'high' %}
+                <div class="alert alert-danger mb-0">
+                    Urgent — Please attend to this immediately!
+                </div>
+                {% elif result.urgency == 'medium' %}
+                <div class="alert alert-warning mb-0">
+                    Moderate — Schedule a service soon.
+                </div>
+                {% elif result.urgency == 'low' %}
+                <div class="alert alert-success mb-0">
+                    Minor — Can be fixed during next regular service.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <h6 class="text-muted">Try these example problems:</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for problem in [
+                    'noise while braking',
+                    'bike not starting',
+                    'poor mileage',
+                    'chain noise',
+                    'smoke from engine'
+                ] %}
+                <button class="btn btn-sm btn-outline-secondary"
+                        onclick="document.querySelector('textarea').value='{{ problem }}'">
+                    {{ problem }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

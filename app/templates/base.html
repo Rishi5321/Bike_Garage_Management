@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bike Garage</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark px-4">
+        <a class="navbar-brand fw-bold" href="/">🔧 Bike Garage</a>
+        
+
+        <div>
+            <!-- <a href="/" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/customers" class="btn btn-outline-light btn-sm me-2">Customers</a>
+            <a href="/bikes" class="btn btn-outline-light btn-sm me-2">Bikes</a>
+            <a href="/services" class="btn btn-outline-light btn-sm me-2">Services</a>
+            <a href="/inventory" class="btn btn-outline-light btn-sm me-2">Inventory</a>
+            <a href="/billing" class="btn btn-outline-light btn-sm">Billing</a> -->
+            <a href="/" class="btn btn-sm me-2 {% if request.path == '/' %}btn-light{% else %}btn-outline-light{% endif %}">Dashboard</a>
+        <a href="/customers" class="btn btn-sm me-2 {% if request.path.startswith('/customers') %}btn-light{% else %}btn-outline-light{% endif %}">Customers</a>
+        <a href="/bikes" class="btn btn-sm me-2 {% if request.path.startswith('/bikes') %}btn-light{% else %}btn-outline-light{% endif %}">Bikes</a>
+        <a href="/services" class="btn btn-sm me-2 {% if request.path.startswith('/services') %}btn-light{% else %}btn-outline-light{% endif %}">Services</a>
+        <a href="/inventory" class="btn btn-sm me-2 {% if request.path.startswith('/inventory') %}btn-light{% else %}btn-outline-light{% endif %}">Inventory</a>
+        <a href="/billing" class="btn btn-sm {% if request.path.startswith('/billing') %}btn-light{% else %}btn-outline-light{% endif %}">Billing</a>
+        <a href="/fault-detection" class="btn btn-sm me-2 {% if request.path.startswith('/fault-detection') %}btn-light{% else %}btn-outline-light{% endif %}">AI Faults</a>
+        <a href="/due-services" class="btn btn-sm me-2 {% if request.path.startswith('/due-services') %}btn-light{% else %}btn-outline-light{% endif %}">Due Services</a>
+        <a href="/chatbot" class="btn btn-sm me-2 {% if request.path.startswith('/chatbot') %}btn-light{% else %}btn-outline-light{% endif %}">AI Chat</a>
+        <a href="/logout" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+    </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

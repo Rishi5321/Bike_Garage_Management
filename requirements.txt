@@ -1,0 +1,13 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+python-dotenv
+mysqlclient
+reportlab
+twilio
+APScheduler
+scikit-learn
+pandas
+numpy
+anthropic

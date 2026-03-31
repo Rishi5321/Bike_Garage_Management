@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2 class="mb-4">Service Details</h2>
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th>Bike Number</th><td>{{ service.bike.bike_number }}</td></tr>
+                    <tr><th>Bike Model</th><td>{{ service.bike.bike_model }}</td></tr>
+                    <tr><th>Owner</th><td>{{ service.bike.customer.name }}</td></tr>
+                    <tr><th>Phone</th><td>{{ service.bike.customer.phone }}</td></tr>
+                    <tr><th>Service Type</th><td>{{ service.service_type }}</td></tr>
+                    <tr><th>Description</th><td>{{ service.description or '-' }}</td></tr>
+                    <tr><th>Cost</th><td>₹{{ service.cost }}</td></tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            {% if service.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr><th>Service Date</th><td>{{ service.service_date.strftime('%d-%m-%Y %H:%M') }}</td></tr>
+                    {% if service.completed_at %}
+                    <tr><th>Completed At</th><td>{{ service.completed_at.strftime('%d-%m-%Y %H:%M') }}</td></tr>
+                    {% endif %}
+                </table>
+
+                {% if service.status == 'pending' %}
+                <form action="/services/complete/{{ service.id }}" method="POST" style="display:inline">
+                    <button class="btn btn-success">Mark as Completed</button>
+                </form>
+                {% endif %}
+                <a href="/services/edit/{{ service.id }}" class="btn btn-warning">Edit</a>
+                <a href="/services" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

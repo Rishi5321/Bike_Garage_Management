@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Registered Bikes</h2>
+    <a href="/bikes/add" class="btn btn-primary">+ Register Bike</a>
+</div>
+
+{% if bikes %}
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Bike Number</th>
+            <th>Model</th>
+            <th>Brand</th>
+            <th>Year</th>
+            <th>Owner</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for b in bikes %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ b.bike_number }}</td>
+            <td>{{ b.bike_model }}</td>
+            <td>{{ b.brand or '-' }}</td>
+            <td>{{ b.year or '-' }}</td>
+            <td>{{ b.customer.name }}</td>
+            <td>
+                <a href="/bikes/{{ b.id }}" class="btn btn-sm btn-info">View</a>
+                <a href="/bikes/edit/{{ b.id }}" class="btn btn-sm btn-warning">Edit</a>
+                <form action="/bikes/delete/{{ b.id }}" method="POST" style="display:inline">
+                    <button onclick="return confirm('Delete this bike?')" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No bikes registered yet. Register your first bike!</div>
+{% endif %}
+
+{% endblock %}

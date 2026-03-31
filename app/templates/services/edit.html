@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-4">Edit Service</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Bike *</label>
+                <select name="bike_id" class="form-select" required>
+                    <option value="">-- Select Bike --</option>
+                    {% for b in bikes %}
+                    <option value="{{ b.id }}"
+                        {% if b.id == service.bike_id %}selected{% endif %}>
+                        {{ b.bike_number }} - {{ b.bike_model }} ({{ b.customer.name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Service Type *</label>
+                <select name="service_type" class="form-select" required>
+                    {% for st in service_types %}
+                    <option value="{{ st }}"
+                        {% if st == service.service_type %}selected{% endif %}>
+                        {{ st }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control"
+                          rows="3">{{ service.description or '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Cost (₹)</label>
+                <input type="number" name="cost" class="form-control"
+                       value="{{ service.cost }}" step="0.01">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Service</button>
+            <a href="/services" class="btn btn-secondary w-100 mt-2">Cancel</a>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

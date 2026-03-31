@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2 class="mb-4">Bike Details</h2>
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr><th>Bike Number</th><td>{{ bike.bike_number }}</td></tr>
+                    <tr><th>Model</th><td>{{ bike.bike_model }}</td></tr>
+                    <tr><th>Brand</th><td>{{ bike.brand or '-' }}</td></tr>
+                    <tr><th>Year</th><td>{{ bike.year or '-' }}</td></tr>
+                    <tr><th>Owner</th><td>{{ bike.customer.name }}</td></tr>
+                    <tr><th>Phone</th><td>{{ bike.customer.phone }}</td></tr>
+                </table>
+                <a href="/bikes/edit/{{ bike.id }}" class="btn btn-warning">Edit</a>
+                <a href="/predict/{{ bike.id }}" class="btn btn-purple btn-warning">
+    AI Predict Service
+</a>
+                <a href="/bikes" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

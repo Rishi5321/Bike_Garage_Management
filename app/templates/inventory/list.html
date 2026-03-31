@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if low_stock %}
+<div class="alert alert-danger">
+    <strong>Low Stock Alert!</strong>
+    {% for p in low_stock %}
+        <span class="badge bg-danger me-1">{{ p.name }} ({{ p.stock }} left)</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Spare Parts Inventory</h2>
+    <a href="/inventory/add" class="btn btn-primary">+ Add Part</a>
+</div>
+
+<!-- Filter Section -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Search by Part Name</label>
+                <input type="text" id="search-name" class="form-control"
+                       placeholder="Type part name...">
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Filter by Category</label>
+                <select id="search-category" class="form-select">
+                    <option value="">-- All Categories --</option>
+                    <option>Engine</option>
+                    <option>Brakes</option>
+                    <option>Electrical</option>
+                    <option>Tyres</option>
+                    <option>Body Parts</option>
+                    <option>Filters</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="resetFilters()"
+                        class="btn btn-secondary w-100">
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Results count -->
+        <div class="mt-2">
+            <small class="text-muted">
+                Showing <span id="result-count">{{ parts|length }}</span>
+                of {{ parts|length }} parts
+            </small>
+        </div>
+    </div>
+</div>
+
+{% if parts %}
+<table class="table table-bordered table-hover" id="parts-table">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Part Name</th>
+            <th>Category</th>
+            <th>Price (₹)</th>
+            <th>Stock</th>
+            <th>Min Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="parts-body">
+        {% for p in parts %}
+        <tr class="part-row"
+            data-name="{{ p.name | lower }}"
+            data-category="{{ p.category | lower if p.category else '' }}">
+            <td>{{ loop.index }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.category or '-' }}</td>
+            <td>₹{{ p.price }}</td>
+            <td>{{ p.stock }}</td>
+            <td>{{ p.min_stock }}</td>
+            <td>
+                {% if p.stock <= p.min_stock %}
+                    <span class="badge bg-danger">Low Stock</span>
+                {% else %}
+                    <span class="badge bg-success">In Stock</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="/inventory/edit/{{ p.id }}"
+                   class="btn btn-sm btn-warning">Edit</a>
+                <button class="btn btn-sm btn-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#restock{{ p.id }}">
+                    Restock
+                </button>
+                <form action="/inventory/delete/{{ p.id }}"
+                      method="POST" style="display:inline">
+                    <button onclick="return confirm('Delete?')"
+                            class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+
+        <!-- Restock Modal -->
+        <div class="modal fade" id="restock{{ p.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Restock — {{ p.name }}</h5>
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="/inventory/restock/{{ p.id }}" method="POST">
+                        <div class="modal-body">
+                            <label class="form-label">Quantity to Add</label>
+                            <input type="number" name="quantity"
+                                   class="form-control"
+                                   min="1" value="1" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit"
+                                    class="btn btn-primary">Add Stock</button>
+                            <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- No results message -->
+<div id="no-results" class="alert alert-info" style="display:none;">
+    No parts found matching your search!
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    No parts added yet. Add your first spare part!
+</div>
+{% endif %}
+
+<script>
+const nameInput     = document.getElementById('search-name');
+const categoryInput = document.getElementById('search-category');
+const resultCount   = document.getElementById('result-count');
+const noResults     = document.getElementById('no-results');
+
+function filterParts() {
+    const nameQuery     = nameInput.value.toLowerCase().trim();
+    const categoryQuery = categoryInput.value.toLowerCase().trim();
+    const rows          = document.querySelectorAll('.part-row');
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const name     = row.getAttribute('data-name');
+        const category = row.getAttribute('data-category');
+
+        const nameMatch     = name.includes(nameQuery);
+        const categoryMatch = categoryQuery === '' ||
+                              category === categoryQuery;
+
+        if (nameMatch && categoryMatch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    resultCount.textContent = visibleCount;
+
+    if (visibleCount === 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+function resetFilters() {
+    nameInput.value     = '';
+    categoryInput.value = '';
+    filterParts();
+}
+
+nameInput.addEventListener('input', filterParts);
+categoryInput.addEventListener('change', filterParts);
+</script>
+
+{% endblock %}

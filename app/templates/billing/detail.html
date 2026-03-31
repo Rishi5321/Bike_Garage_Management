@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Bill #{{ bill.id }}</h2>
+            {% if not bill.paid %}
+            <form action="/billing/pay/{{ bill.id }}" method="POST">
+                <button class="btn btn-success">Mark as Paid</button>
+            </form>
+            {% else %}
+            <span class="badge bg-success fs-6">Paid</span>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <strong>Bike Garage — Invoice</strong>
+            </div>
+            <div class="card-body">
+
+                <table class="table table-borderless">
+                    <tr><th>Customer</th><td>{{ bill.service.bike.customer.name }}</td></tr>
+                    <tr><th>Phone</th><td>{{ bill.service.bike.customer.phone }}</td></tr>
+                    <tr><th>Bike</th><td>{{ bill.service.bike.bike_number }} — {{ bill.service.bike.bike_model }}</td></tr>
+                    <tr><th>Date</th><td>{{ bill.created_at.strftime('%d-%m-%Y') }}</td></tr>
+                </table>
+
+                <hr>
+                <h6>Service Charges</h6>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr><th>Item</th><th class="text-end">Amount</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ bill.service.service_type }}</td>
+                            <td class="text-end">₹{{ bill.service.cost }}</td>
+                        </tr>
+                        {% for sp in bill.service.parts_used %}
+                        <tr>
+                            <td>{{ sp.part.name }} x{{ sp.quantity }}</td>
+                            <td class="text-end">₹{{ sp.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-dark">
+                            <th>Total</th>
+                            <th class="text-end">₹{{ bill.total_amount }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+    <a href="/billing/pdf/{{ bill.id }}" class="btn btn-outline-danger">
+        Download PDF
+    </a>
+    <a href="https://wa.me/91{{ bill.service.bike.customer.phone }}?text={{ whatsapp_message }}"
+       target="_blank" class="btn btn-success">
+        Share on WhatsApp
+    </a>
+    <a href="/billing" class="btn btn-secondary">Back</a>
+</div>
+
+                <!-- <div class="d-flex gap-2 mt-3">
+                    <a href="/billing/pdf/{{ bill.id }}" class="btn btn-outline-danger">
+                        Download PDF
+                    </a>
+                    <a href="/billing" class="btn btn-secondary">Back</a>
+                </div> -->
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
