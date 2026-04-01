@@ -80,8 +80,24 @@ def edit_service(id):
         service.description  = request.form.get('description')
         service.cost         = float(request.form.get('cost') or 0.0)
         db.session.commit()
-        flash('Service updated!', 'success')
+
+        from app.models import Bill, ServicePart
+        existing_bill = Bill.query.filter_by(
+            service_id=service.id
+        ).first()
+
+        if existing_bill:
+            parts_total = sum(
+                sp.price for sp in service.parts_used
+            )
+            existing_bill.total_amount = service.cost + parts_total
+            db.session.commit()
+            flash('Service updated and bill recalculated!', 'success')
+        else:
+            flash('Service updated!', 'success')
+
         return redirect(url_for('services.list_services'))
+
     return render_template('services/edit.html', service=service,
                            bikes=bikes, service_types=SERVICE_TYPES)
 

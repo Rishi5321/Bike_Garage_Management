@@ -28,31 +28,55 @@
                     <tr><th>Date</th><td>{{ bill.created_at.strftime('%d-%m-%Y') }}</td></tr>
                 </table>
 
-                <hr>
-                <h6>Service Charges</h6>
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr><th>Item</th><th class="text-end">Amount</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{{ bill.service.service_type }}</td>
-                            <td class="text-end">₹{{ bill.service.cost }}</td>
-                        </tr>
-                        {% for sp in bill.service.parts_used %}
-                        <tr>
-                            <td>{{ sp.part.name }} x{{ sp.quantity }}</td>
-                            <td class="text-end">₹{{ sp.price }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr class="table-dark">
-                            <th>Total</th>
-                            <th class="text-end">₹{{ bill.total_amount }}</th>
-                        </tr>
-                    </tfoot>
-                </table>
+<hr>
+
+<!-- Service Section -->
+<h6 class="fw-bold mb-2">Service Charges</h6>
+<table class="table table-bordered mb-3">
+    <thead class="table-light">
+        <tr>
+            <th>Service Type</th>
+            <th class="text-end">Cost</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ bill.service.service_type }}</td>
+            <td class="text-end">₹{{ bill.service.cost }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Parts Section -->
+{% if bill.service.parts_used %}
+<h6 class="fw-bold mb-2">Parts Used</h6>
+<table class="table table-bordered mb-3">
+    <thead class="table-light">
+        <tr>
+            <th>Part Name</th>
+            <th class="text-end">Cost</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sp in bill.service.parts_used %}
+        <tr>
+            <td>{{ sp.part.name }} x{{ sp.quantity }}</td>
+            <td class="text-end">₹{{ sp.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- Total -->
+<table class="table table-bordered mb-0">
+    <tbody>
+        <tr class="table-dark">
+            <th>Total Amount</th>
+            <th class="text-end">₹{{ bill.total_amount }}</th>
+        </tr>
+    </tbody>
+</table>
 
                 <div class="d-flex gap-2 mt-3 flex-wrap">
     <a href="/billing/pdf/{{ bill.id }}" class="btn btn-outline-danger">

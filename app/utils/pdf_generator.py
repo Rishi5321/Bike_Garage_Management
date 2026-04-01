@@ -35,11 +35,6 @@ def generate_bill_pdf(bill):
         'normal', parent=styles['Normal'],
         fontSize=10, fontName='Helvetica', spaceAfter=4
     )
-    right_style = ParagraphStyle(
-        'right', parent=styles['Normal'],
-        fontSize=10, fontName='Helvetica',
-        alignment=TA_RIGHT
-    )
 
     elements.append(Paragraph("Bike Garage", title_style))
     elements.append(Paragraph("Professional Bike Repair & Service", subtitle_style))
@@ -78,50 +73,76 @@ def generate_bill_pdf(bill):
     elements.append(info_table)
     elements.append(Spacer(1, 6*mm))
 
-    elements.append(Paragraph("Service & Parts Details", heading_style))
+    elements.append(divider)
+    elements.append(Spacer(1, 4*mm))
 
-    bill_data = [['#', 'Description', 'Amount (Rs)']]
-
+    elements.append(Paragraph("Service Charges", heading_style))
+    bill_data = [['Service Type', 'Amount (Rs)']]
     bill_data.append([
-        '1',
         bill.service.service_type,
         f"Rs {bill.service.cost:.2f}"
     ])
 
-    row_num = 2
-    for sp in bill.service.parts_used:
-        bill_data.append([
-            str(row_num),
-            f"{sp.part.name} x{sp.quantity}",
-            f"Rs {sp.price:.2f}"
-        ])
-        row_num += 1
-
-    bill_data.append(['', '', ''])
-    bill_data.append(['', 'TOTAL AMOUNT', f"Rs {bill.total_amount:.2f}"])
-
-    bill_table = Table(bill_data,
-                       colWidths=[15*mm, 115*mm, 40*mm])
+    bill_table = Table(bill_data, colWidths=[130*mm, 40*mm])
     bill_table.setStyle(TableStyle([
         ('BACKGROUND',    (0,0), (-1,0), colors.HexColor('#2E4057')),
         ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
         ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
         ('FONTSIZE',      (0,0), (-1,0), 11),
-        ('ALIGN',         (2,0), (2,-1), 'RIGHT'),
-        ('FONTNAME',      (0,1), (-1,-2), 'Helvetica'),
-        ('FONTSIZE',      (0,1), (-1,-2), 10),
-        ('ROWBACKGROUNDS',(0,1), (-1,-3),
+        ('ALIGN',         (1,0), (1,-1), 'RIGHT'),
+        ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
+        ('FONTSIZE',      (0,1), (-1,-1), 10),
+        ('ROWBACKGROUNDS',(0,1), (-1,-1),
          [colors.white, colors.HexColor('#F5F5F5')]),
-        ('BACKGROUND',    (0,-1), (-1,-1), colors.HexColor('#EEF2F7')),
-        ('FONTNAME',      (0,-1), (-1,-1), 'Helvetica-Bold'),
-        ('FONTSIZE',      (0,-1), (-1,-1), 12),
-        ('LINEABOVE',     (0,-1), (-1,-1), 1.5, colors.HexColor('#2E4057')),
-        ('GRID',          (0,0),  (-1,-3), 0.5, colors.HexColor('#CCCCCC')),
-        ('BOTTOMPADDING', (0,0),  (-1,-1), 8),
-        ('TOPPADDING',    (0,0),  (-1,-1), 8),
-        ('LEFTPADDING',   (0,0),  (-1,-1), 8),
+        ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor('#CCCCCC')),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+        ('TOPPADDING',    (0,0), (-1,-1), 8),
+        ('LEFTPADDING',   (0,0), (-1,-1), 8),
     ]))
     elements.append(bill_table)
+    elements.append(Spacer(1, 4*mm))
+
+    if bill.service.parts_used:
+        elements.append(Paragraph("Parts Used", heading_style))
+        parts_data = [['Part Name', 'Amount (Rs)']]
+        for sp in bill.service.parts_used:
+            parts_data.append([
+                f"{sp.part.name} x{sp.quantity}",
+                f"Rs {sp.price:.2f}"
+            ])
+
+        parts_table = Table(parts_data, colWidths=[130*mm, 40*mm])
+        parts_table.setStyle(TableStyle([
+            ('BACKGROUND',    (0,0), (-1,0), colors.HexColor('#534AB7')),
+            ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
+            ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',      (0,0), (-1,0), 11),
+            ('ALIGN',         (1,0), (1,-1), 'RIGHT'),
+            ('FONTNAME',      (0,1), (-1,-1), 'Helvetica'),
+            ('FONTSIZE',      (0,1), (-1,-1), 10),
+            ('ROWBACKGROUNDS',(0,1), (-1,-1),
+             [colors.white, colors.HexColor('#F5F5F5')]),
+            ('GRID',          (0,0), (-1,-1), 0.5, colors.HexColor('#CCCCCC')),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+            ('TOPPADDING',    (0,0), (-1,-1), 8),
+            ('LEFTPADDING',   (0,0), (-1,-1), 8),
+        ]))
+        elements.append(parts_table)
+        elements.append(Spacer(1, 4*mm))
+
+    total_data = [['TOTAL AMOUNT', f"Rs {bill.total_amount:.2f}"]]
+    total_table = Table(total_data, colWidths=[130*mm, 40*mm])
+    total_table.setStyle(TableStyle([
+        ('BACKGROUND',    (0,0), (-1,0), colors.HexColor('#2E4057')),
+        ('TEXTCOLOR',     (0,0), (-1,0), colors.white),
+        ('FONTNAME',      (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0), (-1,0), 12),
+        ('ALIGN',         (1,0), (1,0),  'RIGHT'),
+        ('BOTTOMPADDING', (0,0), (-1,0), 10),
+        ('TOPPADDING',    (0,0), (-1,0), 10),
+        ('LEFTPADDING',   (0,0), (-1,0), 8),
+    ]))
+    elements.append(total_table)
     elements.append(Spacer(1, 8*mm))
 
     elements.append(divider)
