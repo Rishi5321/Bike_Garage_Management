@@ -246,7 +246,54 @@ def reset_password():
 
     return render_template('auth/reset_password.html')
 
+@auth.route('/forgot-username', methods=['GET', 'POST'])
+def forgot_username():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user  = User.query.filter_by(email=email).first()
 
+        if user:
+            try:
+                msg = Message(
+                    subject    = 'Your Bike Garage Username',
+                    recipients = [email]
+                )
+                msg.html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+                    <div style="background:#2E4057;color:white;padding:20px;text-align:center;border-radius:8px 8px 0 0;">
+                        <h2 style="margin:0;">🔧 Bike Garage</h2>
+                        <p style="margin:5px 0 0;color:#cdd5e0;font-size:14px;">Username Recovery</p>
+                    </div>
+                    <div style="background:#f8f9fa;padding:30px;border-radius:0 0 8px 8px;">
+                        <p style="font-size:16px;">Hello,</p>
+                        <p>Your username for Bike Garage is:</p>
+                        <div style="background:white;border:2px dashed #2E4057;border-radius:8px;padding:20px;text-align:center;margin:20px 0;">
+                            <h2 style="color:#2E4057;margin:0;letter-spacing:4px;">
+                                {user.username}
+                            </h2>
+                        </div>
+                        <p style="color:#6c757d;font-size:13px;">
+                            You can now login with this username.
+                        </p>
+                        <p style="color:#6c757d;font-size:13px;">
+                            If you did not request this, please ignore this email.
+                        </p>
+                        <hr style="border:none;border-top:1px solid #dee2e6;">
+                        <p style="color:#adb5bd;font-size:12px;text-align:center;">
+                            Bike Garage Management System
+                        </p>
+                    </div>
+                </div>
+                """
+                mail.send(msg)
+                flash('Your username has been sent to your email!', 'success')
+                return redirect(url_for('auth.login'))
+            except Exception as e:
+                flash('Failed to send email. Please try again.', 'danger')
+        else:
+            flash('No account found with this email!', 'danger')
+
+    return render_template('auth/forgot_username.html')
 
 # from flask import Blueprint, render_template, request, redirect, url_for, flash
 # from flask_login import login_user, logout_user, login_required, current_user

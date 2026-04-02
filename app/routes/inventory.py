@@ -1,3 +1,6 @@
+from flask import jsonify
+from app.ai.inventory_ai import process_inventory_command, execute_inventory_command, get_inventory_context
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from app.models import SparePart
@@ -68,3 +71,45 @@ def restock_part(id):
     db.session.commit()
     flash(f'{quantity} units added to {part.name}!', 'success')
     return redirect(url_for('inventory.list_parts'))
+
+@inventory.route('/ai-inventory')
+
+def ai_inventory():
+    from app.models import SparePart
+    parts = SparePart.query.all()
+    return render_template('inventory/ai_inventory.html', parts=parts)
+
+
+@inventory.route('/ai-inventory/command', methods=['POST'])
+
+def ai_inventory_command():
+    command = request.form.get('command')
+    if not command:
+        return jsonify({'success': False, 'message': 'Please enter a command!'})
+
+    result   = process_inventory_command(command)
+    response = execute_inventory_command(result, command)
+    return jsonify(response)
+
+@inventory.route('/ai-inventory/refresh')
+
+def ai_inventory_refresh():
+    from app.models import SparePart
+    parts = SparePart.query.all()
+    return jsonify({
+        'parts': [{
+            'name'      : p.name,
+            'stock'     : p.stock,
+            'price'     : p.price,
+            'min_stock' : p.min_stock
+        } for p in parts]
+    })
+
+@inventory.route('/ai-inventory/history')
+# @login_required
+def ai_inventory_history():
+    from app.models import InventoryLog
+    logs = InventoryLog.query.order_by(
+        InventoryLog.created_at.desc()
+    ).all()
+    return render_template('inventory/ai_inventory_history.html', logs=logs)

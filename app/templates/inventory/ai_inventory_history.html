@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Inventory Change History</h2>
+    <a href="/ai-inventory" class="btn btn-dark btn-sm">
+        AI Inventory Control
+    </a>
+</div>
+
+{% if logs %}
+
+<!-- Filter -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Search Part Name</label>
+                <input type="text" id="search-part"
+                       class="form-control"
+                       placeholder="Type part name...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Filter by Action</label>
+                <select id="search-action" class="form-select">
+                    <option value="">-- All Actions --</option>
+                    <option>Stock Added</option>
+                    <option>Stock Reduced</option>
+                    <option>Stock Set</option>
+                    <option>Price Updated</option>
+                    <option>Min Stock Set</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button onclick="resetFilters()"
+                        class="btn btn-secondary w-100">
+                    Reset
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Showing <span id="result-count">{{ logs|length }}</span>
+                of {{ logs|length }} records
+            </small>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Part Name</th>
+                    <th>Action</th>
+                    <th>Quantity</th>
+                    <th>Old Value</th>
+                    <th>New Value</th>
+                    <th>Command Used</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody id="logs-body">
+                {% for log in logs %}
+                <tr class="log-row"
+                    data-part="{{ log.part_name | lower }}"
+                    data-action="{{ log.action }}">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ log.part_name }}</td>
+                    <td>
+                        {% if log.action == 'Stock Added' %}
+                            <span class="badge bg-success">{{ log.action }}</span>
+                        {% elif log.action == 'Stock Reduced' %}
+                            <span class="badge bg-danger">{{ log.action }}</span>
+                        {% elif log.action == 'Price Updated' %}
+                            <span class="badge bg-info">{{ log.action }}</span>
+                        {% elif log.action == 'Stock Set' %}
+                            <span class="badge bg-primary">{{ log.action }}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.quantity or '-' }}</td>
+                    <td>{{ log.old_value or '-' }}</td>
+                    <td>{{ log.new_value or '-' }}</td>
+                    <td>
+                        <small class="text-muted"
+                               style="font-size:12px;">
+                            {{ log.command }}
+                        </small>
+                    </td>
+                    <td>
+                        <small>
+                            {{ log.created_at.strftime('%d-%m-%Y %H:%M') }}
+                        </small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="no-results"
+             class="alert alert-info m-3"
+             style="display:none;">
+            No records found!
+        </div>
+    </div>
+</div>
+
+<script>
+const partInput   = document.getElementById('search-part');
+const actionInput = document.getElementById('search-action');
+const resultCount = document.getElementById('result-count');
+const noResults   = document.getElementById('no-results');
+
+function filterLogs() {
+    const partQuery   = partInput.value.toLowerCase().trim();
+    const actionQuery = actionInput.value.trim();
+    const rows        = document.querySelectorAll('.log-row');
+
+    let visibleCount = 0;
+    rows.forEach(row => {
+        const part   = row.getAttribute('data-part');
+        const action = row.getAttribute('data-action');
+
+        const partMatch   = part.includes(partQuery);
+        const actionMatch = actionQuery === '' || action === actionQuery;
+
+        if (partMatch && actionMatch) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    resultCount.textContent = visibleCount;
+    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function resetFilters() {
+    partInput.value   = '';
+    actionInput.value = '';
+    filterLogs();
+}
+
+partInput.addEventListener('input',    filterLogs);
+actionInput.addEventListener('change', filterLogs);
+</script>
+
+{% else %}
+<div class="alert alert-info">
+    No inventory changes yet. Use AI Inventory Control to update stock!
+</div>
+{% endif %}
+
+{% endblock %}
