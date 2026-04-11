@@ -1,105 +1,152 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="row justify-content-center">
-    <div class="col-md-7">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">Invoice #BG{{ '%04d' % bill.id }}</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            Generated on {{ bill.created_at.strftime('%d %B %Y') }}
+        </p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        {% if bill.paid %}
+            <span class="badge fs-6" style="background:#4CAF82;">Paid</span>
+        {% else %}
+        <form action="/billing/pay/{{ bill.id }}" method="POST">
+            <button class="btn btn-success">Mark as Paid</button>
+        </form>
+        {% endif %}
+        <a href="/billing/pdf/{{ bill.id }}"
+           class="btn btn-outline-danger">Download PDF</a>
+        {% if bill.service.bike.customer.phone %}
+        <a href="https://wa.me/91{{ bill.service.bike.customer.phone }}?text={{ whatsapp_message }}"
+           target="_blank" class="btn btn-success">
+            Share on WhatsApp
+        </a>
+        {% endif %}
+        <a href="/billing" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Bill #{{ bill.id }}</h2>
-            {% if not bill.paid %}
-            <form action="/billing/pay/{{ bill.id }}" method="POST">
-                <button class="btn btn-success">Mark as Paid</button>
-            </form>
-            {% else %}
-            <span class="badge bg-success fs-6">Paid</span>
-            {% endif %}
+<div class="row g-3">
+
+    <!-- Customer & Bike Info -->
+    <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Customer Details</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:46px;height:46px;border-radius:50%;
+                                background:#EEF2FF;color:#534AB7;
+                                display:flex;align-items:center;
+                                justify-content:center;font-weight:700;
+                                font-size:18px;">
+                        {{ bill.service.bike.customer.name[0].upper() }}
+                    </div>
+                    <div>
+                        <div style="font-weight:700;font-size:16px;">
+                            {{ bill.service.bike.customer.name }}
+                        </div>
+                        <div style="font-size:13px;color:#888;">
+                            {{ bill.service.bike.customer.phone }}
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Bike</th>
+                        <td style="font-size:13px;font-weight:600;">
+                            {{ bill.service.bike.bike_number }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Model</th>
+                        <td style="font-size:13px;">
+                            {{ bill.service.bike.bike_model }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Date</th>
+                        <td style="font-size:13px;">
+                            {{ bill.created_at.strftime('%d-%m-%Y') }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
         </div>
+    </div>
 
+    <!-- Invoice -->
+    <div class="col-md-7">
         <div class="card">
-            <div class="card-header bg-dark text-white">
-                <strong>Bike Garage — Invoice</strong>
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Invoice Details</strong>
             </div>
             <div class="card-body">
 
-                <table class="table table-borderless">
-                    <tr><th>Customer</th><td>{{ bill.service.bike.customer.name }}</td></tr>
-                    <tr><th>Phone</th><td>{{ bill.service.bike.customer.phone }}</td></tr>
-                    <tr><th>Bike</th><td>{{ bill.service.bike.bike_number }} — {{ bill.service.bike.bike_model }}</td></tr>
-                    <tr><th>Date</th><td>{{ bill.created_at.strftime('%d-%m-%Y') }}</td></tr>
+                <!-- Service Charges -->
+                <p class="fw-bold mb-2" style="font-size:13px;color:#888;">
+                    SERVICE CHARGES
+                </p>
+                <table class="table table-bordered mb-3">
+                    <thead style="background:#F8FAFC;">
+                        <tr>
+                            <th style="font-size:13px;">Service Type</th>
+                            <th class="text-end" style="font-size:13px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ bill.service.service_type }}</td>
+                            <td class="text-end fw-bold">₹{{ bill.service.cost }}</td>
+                        </tr>
+                    </tbody>
                 </table>
 
-<hr>
+                <!-- Parts Used -->
+                {% if bill.service.parts_used %}
+                <p class="fw-bold mb-2" style="font-size:13px;color:#888;">
+                    PARTS USED
+                </p>
+                <table class="table table-bordered mb-3">
+                    <thead style="background:#F8FAFC;">
+                        <tr>
+                            <th style="font-size:13px;">Part Name</th>
+                            <th class="text-end" style="font-size:13px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sp in bill.service.parts_used %}
+                        <tr>
+                            <td style="font-size:13px;">
+                                {{ sp.part.name }} x{{ sp.quantity }}
+                            </td>
+                            <td class="text-end fw-bold">₹{{ sp.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
 
-<!-- Service Section -->
-<h6 class="fw-bold mb-2">Service Charges</h6>
-<table class="table table-bordered mb-3">
-    <thead class="table-light">
-        <tr>
-            <th>Service Type</th>
-            <th class="text-end">Cost</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ bill.service.service_type }}</td>
-            <td class="text-end">₹{{ bill.service.cost }}</td>
-        </tr>
-    </tbody>
-</table>
-
-<!-- Parts Section -->
-{% if bill.service.parts_used %}
-<h6 class="fw-bold mb-2">Parts Used</h6>
-<table class="table table-bordered mb-3">
-    <thead class="table-light">
-        <tr>
-            <th>Part Name</th>
-            <th class="text-end">Cost</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for sp in bill.service.parts_used %}
-        <tr>
-            <td>{{ sp.part.name }} x{{ sp.quantity }}</td>
-            <td class="text-end">₹{{ sp.price }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-
-<!-- Total -->
-<table class="table table-bordered mb-0">
-    <tbody>
-        <tr class="table-dark">
-            <th>Total Amount</th>
-            <th class="text-end">₹{{ bill.total_amount }}</th>
-        </tr>
-    </tbody>
-</table>
-
-                <div class="d-flex gap-2 mt-3 flex-wrap">
-    <a href="/billing/pdf/{{ bill.id }}" class="btn btn-outline-danger">
-        Download PDF
-    </a>
-    <a href="https://wa.me/91{{ bill.service.bike.customer.phone }}?text={{ whatsapp_message }}"
-       target="_blank" class="btn btn-success">
-        Share on WhatsApp
-    </a>
-    <a href="/billing" class="btn btn-secondary">Back</a>
-</div>
-
-                <!-- <div class="d-flex gap-2 mt-3">
-                    <a href="/billing/pdf/{{ bill.id }}" class="btn btn-outline-danger">
-                        Download PDF
-                    </a>
-                    <a href="/billing" class="btn btn-secondary">Back</a>
-                </div> -->
+                <!-- Total -->
+                <div style="background:#1E2D40;border-radius:10px;
+                            padding:16px 20px;
+                            display:flex;justify-content:space-between;
+                            align-items:center;">
+                    <span style="color:white;font-weight:700;font-size:15px;">
+                        TOTAL AMOUNT
+                    </span>
+                    <span style="color:#4FC3F7;font-weight:700;font-size:22px;">
+                        ₹{{ bill.total_amount }}
+                    </span>
+                </div>
 
             </div>
         </div>
-
     </div>
+
 </div>
 
 {% endblock %}

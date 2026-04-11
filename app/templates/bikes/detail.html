@@ -1,27 +1,158 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2 class="mb-4">Bike Details</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">{{ bike.bike_number }}</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {{ bike.bike_model }} — {{ bike.brand or 'N/A' }}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/predict/{{ bike.id }}"
+           class="btn btn-outline-primary">AI Predict Service</a>
+        <a href="/bikes/edit/{{ bike.id }}"
+           class="btn btn-outline-warning">Edit</a>
+        <a href="/bikes" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- Bike Info -->
+    <div class="col-md-5">
         <div class="card">
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Bike Details</strong>
+            </div>
             <div class="card-body">
-                <table class="table table-borderless">
-                    <tr><th>Bike Number</th><td>{{ bike.bike_number }}</td></tr>
-                    <tr><th>Model</th><td>{{ bike.bike_model }}</td></tr>
-                    <tr><th>Brand</th><td>{{ bike.brand or '-' }}</td></tr>
-                    <tr><th>Year</th><td>{{ bike.year or '-' }}</td></tr>
-                    <tr><th>Owner</th><td>{{ bike.customer.name }}</td></tr>
-                    <tr><th>Phone</th><td>{{ bike.customer.phone }}</td></tr>
+                <div class="text-center mb-3">
+                    <div style="font-size:56px;">🏍️</div>
+                    <h5 class="fw-bold mb-0">{{ bike.bike_number }}</h5>
+                    <p class="text-muted mb-0">{{ bike.bike_model }}</p>
+                </div>
+                <table class="table table-borderless table-sm">
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Brand</th>
+                        <td style="font-size:13px;">{{ bike.brand or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Year</th>
+                        <td style="font-size:13px;">{{ bike.year or '-' }}</td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Registered</th>
+                        <td style="font-size:13px;">
+                            {{ bike.created_at.strftime('%d-%m-%Y') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Total Services</th>
+                        <td>
+                            <span class="badge"
+                                  style="background:#EEF2FF;color:#534AB7;">
+                                {{ bike.services|length }}
+                            </span>
+                        </td>
+                    </tr>
                 </table>
-                <a href="/bikes/edit/{{ bike.id }}" class="btn btn-warning">Edit</a>
-                <a href="/predict/{{ bike.id }}" class="btn btn-purple btn-warning">
-    AI Predict Service
-</a>
-                <a href="/bikes" class="btn btn-secondary">Back</a>
             </div>
         </div>
     </div>
+
+    <!-- Owner Info -->
+    <div class="col-md-7">
+        <div class="card mb-3">
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Owner Details</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:48px;height:48px;border-radius:50%;
+                                background:#EEF2FF;color:#534AB7;
+                                display:flex;align-items:center;
+                                justify-content:center;font-weight:700;
+                                font-size:20px;">
+                        {{ bike.customer.name[0].upper() }}
+                    </div>
+                    <div>
+                        <div style="font-weight:700;font-size:16px;">
+                            {{ bike.customer.name }}
+                        </div>
+                        <div style="font-size:13px;color:#888;">
+                            {{ bike.customer.phone }}
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-borderless table-sm">
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Email</th>
+                        <td style="font-size:13px;">
+                            {{ bike.customer.email or '-' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="color:#888;font-size:13px;">Address</th>
+                        <td style="font-size:13px;">
+                            {{ bike.customer.address or '-' }}
+                        </td>
+                    </tr>
+                </table>
+                <a href="/customers/{{ bike.customer.id }}"
+                   class="btn btn-sm btn-outline-primary">
+                    View Customer Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- Service History -->
+        <div class="card">
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Service History</strong>
+            </div>
+            <div class="card-body p-0">
+                {% if bike.services %}
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in bike.services|reverse %}
+                        <tr>
+                            <td style="font-size:13px;">{{ s.service_type }}</td>
+                            <td style="font-size:13px;">₹{{ s.cost }}</td>
+                            <td>
+                                {% if s.status == 'completed' %}
+                                    <span class="badge"
+                                          style="background:#4CAF82;">Completed</span>
+                                {% else %}
+                                    <span class="badge"
+                                          style="background:#F4A435;color:white;">
+                                          Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size:12px;color:#888;">
+                                {{ s.service_date.strftime('%d-%m-%Y') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    No services yet for this bike
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}

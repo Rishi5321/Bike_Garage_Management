@@ -1,46 +1,192 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Registered Bikes</h2>
+    <div>
+        <h2 class="mb-0">Bikes</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {{ bikes|length }} total bikes registered
+        </p>
+    </div>
     <a href="/bikes/add" class="btn btn-primary">+ Register Bike</a>
 </div>
 
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="search-bike"
+                       class="form-control"
+                       placeholder="Search by bike number or model...">
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="search-owner"
+                       class="form-control"
+                       placeholder="Search by owner name...">
+            </div>
+            <div class="col-md-2">
+                <button onclick="resetSearch()"
+                        class="btn btn-outline-secondary w-100">Reset</button>
+            </div>
+            <div class="col-md-2 text-end">
+                <small class="text-muted">
+                    Showing <span id="result-count">{{ bikes|length }}</span>
+                    of {{ bikes|length }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if bikes %}
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Bike Number</th>
-            <th>Model</th>
-            <th>Brand</th>
-            <th>Year</th>
-            <th>Owner</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for b in bikes %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ b.bike_number }}</td>
-            <td>{{ b.bike_model }}</td>
-            <td>{{ b.brand or '-' }}</td>
-            <td>{{ b.year or '-' }}</td>
-            <td>{{ b.customer.name }}</td>
-            <td>
-                <a href="/bikes/{{ b.id }}" class="btn btn-sm btn-info">View</a>
-                <a href="/bikes/edit/{{ b.id }}" class="btn btn-sm btn-warning">Edit</a>
-                <form action="/bikes/delete/{{ b.id }}" method="POST" style="display:inline">
-                    <button onclick="return confirm('Delete this bike?')" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Bike</th>
+                    <th>Brand & Year</th>
+                    <th>Owner</th>
+                    <th>Phone</th>
+                    <th>Services</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bikes-body">
+                {% for b in bikes %}
+                <tr class="bike-row"
+                    data-number="{{ b.bike_number | lower }}"
+                    data-model="{{ b.bike_model | lower }}"
+                    data-owner="{{ b.customer.name | lower }}">
+                    <td style="color:#888;font-size:13px;">{{ loop.index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:38px;height:38px;border-radius:10px;
+                                        background:#EEF2FF;color:#534AB7;
+                                        display:flex;align-items:center;
+                                        justify-content:center;font-size:18px;">
+                                🏍️
+                            </div>
+                            <div>
+                                <div style="font-weight:700;font-size:14px;">
+                                    {{ b.bike_number }}
+                                </div>
+                                <div style="font-size:12px;color:#888;">
+                                    {{ b.bike_model }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size:13px;">{{ b.brand or '-' }}</div>
+                        <div style="font-size:12px;color:#888;">{{ b.year or '-' }}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:30px;height:30px;border-radius:50%;
+                                        background:#EDFAF3;color:#4CAF82;
+                                        display:flex;align-items:center;
+                                        justify-content:center;font-weight:700;
+                                        font-size:12px;flex-shrink:0;">
+                                {{ b.customer.name[0].upper() }}
+                            </div>
+                            <span style="font-size:13px;">{{ b.customer.name }}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:13px;color:#888;">{{ b.customer.phone }}</td>
+                    <td>
+                        <span class="badge"
+                              style="background:#EEF2FF;color:#534AB7;font-size:12px;">
+                            {{ b.services|length }} service(s)
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="/bikes/{{ b.id }}"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="/predict/{{ b.id }}"
+                               class="btn btn-sm btn-outline-purple"
+                               style="border-color:#534AB7;color:#534AB7;">
+                               Predict
+                            </a>
+                            <a href="/bikes/edit/{{ b.id }}"
+                               class="btn btn-sm btn-outline-warning">Edit</a>
+                            <form action="/bikes/delete/{{ b.id }}"
+                                  method="POST" style="display:inline">
+                                <button onclick="return confirm('Delete {{ b.bike_number }}?')"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="no-results" class="text-center py-4 text-muted"
+             style="display:none;">
+            No bikes found matching your search!
+        </div>
+    </div>
+</div>
+
 {% else %}
-<div class="alert alert-info">No bikes registered yet. Register your first bike!</div>
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div style="font-size:48px;margin-bottom:16px;">🏍️</div>
+        <h5 class="text-muted">No bikes registered yet</h5>
+        <p class="text-muted mb-3">Register your first bike to get started!</p>
+        <a href="/bikes/add" class="btn btn-primary">+ Register First Bike</a>
+    </div>
+</div>
 {% endif %}
+
+<script>
+const bikeInput  = document.getElementById('search-bike');
+const ownerInput = document.getElementById('search-owner');
+const resultCount = document.getElementById('result-count');
+const noResults   = document.getElementById('no-results');
+
+function filterBikes() {
+    const bikeQ  = bikeInput.value.toLowerCase().trim();
+    const ownerQ = ownerInput.value.toLowerCase().trim();
+    const rows   = document.querySelectorAll('.bike-row');
+    let visible  = 0;
+
+    rows.forEach(row => {
+        const number = row.getAttribute('data-number');
+        const model  = row.getAttribute('data-model');
+        const owner  = row.getAttribute('data-owner');
+
+        const bikeMatch  = number.includes(bikeQ) || model.includes(bikeQ);
+        const ownerMatch = owner.includes(ownerQ);
+
+        if (bikeMatch && ownerMatch) {
+            row.style.display = ''; visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    resultCount.textContent = visible;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function resetSearch() {
+    bikeInput.value  = '';
+    ownerInput.value = '';
+    document.querySelectorAll('.bike-row').forEach(r => r.style.display = '');
+    resultCount.textContent = document.querySelectorAll('.bike-row').length;
+    noResults.style.display = 'none';
+}
+
+bikeInput.addEventListener('input',  filterBikes);
+ownerInput.addEventListener('input', filterBikes);
+</script>
 
 {% endblock %}

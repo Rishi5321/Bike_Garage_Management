@@ -1,42 +1,160 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Customers</h2>
-    <a href="/customers/add" class="btn btn-primary">+ Add Customer</a>
+    <div>
+        <h2 class="mb-0">Customers</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {{ customers|length }} total customers registered
+        </p>
+    </div>
+    <a href="/customers/add" class="btn btn-primary">
+        + Add Customer
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input type="text" id="search-input" class="form-control"
+                       placeholder="Search by name or phone...">
+            </div>
+            <div class="col-md-2">
+                <button onclick="resetSearch()"
+                        class="btn btn-outline-secondary w-100">
+                    Reset
+                </button>
+            </div>
+            <div class="col-md-4 text-end">
+                <small class="text-muted">
+                    Showing <span id="result-count">{{ customers|length }}</span>
+                    of {{ customers|length }} customers
+                </small>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if customers %}
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for c in customers %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ c.name }}</td>
-            <td>{{ c.phone }}</td>
-            <td>{{ c.email or '-' }}</td>
-            <td>
-                <a href="/customers/{{ c.id }}" class="btn btn-sm btn-info">View</a>
-                <a href="/customers/edit/{{ c.id }}" class="btn btn-sm btn-warning">Edit</a>
-                <form action="/customers/delete/{{ c.id }}" method="POST" style="display:inline">
-                    <button onclick="return confirm('Delete this customer?')" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0" id="customers-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Bikes</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="customers-body">
+                {% for c in customers %}
+                <tr class="customer-row"
+                    data-name="{{ c.name | lower }}"
+                    data-phone="{{ c.phone }}">
+                    <td style="color:#888;font-size:13px;">{{ loop.index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:36px;height:36px;border-radius:50%;
+                                        background:#EEF2FF;color:#534AB7;
+                                        display:flex;align-items:center;
+                                        justify-content:center;font-weight:700;
+                                        font-size:14px;flex-shrink:0;">
+                                {{ c.name[0].upper() }}
+                            </div>
+                            <div>
+                                <div style="font-weight:600;font-size:14px;">{{ c.name }}</div>
+                                <div style="font-size:11px;color:#888;">
+                                    {{ c.address or 'No address' }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ c.phone }}</td>
+                    <td style="color:#888;font-size:13px;">{{ c.email or '-' }}</td>
+                    <td>
+                        <span class="badge"
+                              style="background:#EEF2FF;color:#534AB7;font-size:12px;">
+                            {{ c.bikes|length }} bike(s)
+                        </span>
+                    </td>
+                    <td style="font-size:12px;color:#888;">
+                        {{ c.created_at.strftime('%d-%m-%Y') }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="/customers/{{ c.id }}"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="/customers/edit/{{ c.id }}"
+                               class="btn btn-sm btn-outline-warning">Edit</a>
+                            <form action="/customers/delete/{{ c.id }}"
+                                  method="POST" style="display:inline">
+                                <button onclick="return confirm('Delete {{ c.name }}?')"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="no-results" class="text-center py-4 text-muted"
+             style="display:none;">
+            No customers found matching your search!
+        </div>
+    </div>
+</div>
+
 {% else %}
-<div class="alert alert-info">No customers yet. Add your first customer!</div>
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div style="font-size:48px;margin-bottom:16px;">👥</div>
+        <h5 class="text-muted">No customers yet</h5>
+        <p class="text-muted mb-3">Add your first customer to get started!</p>
+        <a href="/customers/add" class="btn btn-primary">+ Add First Customer</a>
+    </div>
+</div>
 {% endif %}
+
+<script>
+const searchInput = document.getElementById('search-input');
+const resultCount = document.getElementById('result-count');
+const noResults   = document.getElementById('no-results');
+
+searchInput.addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+    const rows  = document.querySelectorAll('.customer-row');
+    let visible = 0;
+
+    rows.forEach(row => {
+        const name  = row.getAttribute('data-name');
+        const phone = row.getAttribute('data-phone');
+        if (name.includes(query) || phone.includes(query)) {
+            row.style.display = ''; visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    resultCount.textContent = visible;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+});
+
+function resetSearch() {
+    searchInput.value = '';
+    document.querySelectorAll('.customer-row').forEach(r => r.style.display = '');
+    resultCount.textContent = document.querySelectorAll('.customer-row').length;
+    noResults.style.display = 'none';
+}
+</script>
 
 {% endblock %}

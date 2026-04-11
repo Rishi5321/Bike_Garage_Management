@@ -1,23 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Services</h2>
+    <div>
+        <h2 class="mb-0">Services</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {{ services|length }} total service records
+        </p>
+    </div>
     <a href="/services/add" class="btn btn-primary">+ New Service</a>
 </div>
 
 <!-- Filter Section -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label fw-bold">Search by Bike Number</label>
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
                 <input type="text" id="search-bike"
                        class="form-control"
-                       placeholder="Type bike number...">
+                       placeholder="Search by bike number...">
             </div>
             <div class="col-md-3">
-                <label class="form-label fw-bold">Filter by Status</label>
                 <select id="search-status" class="form-select">
                     <option value="">-- All Status --</option>
                     <option value="pending">Pending</option>
@@ -25,134 +29,163 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label fw-bold">Filter by Date</label>
                 <input type="date" id="search-date" class="form-control">
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-2">
                 <button onclick="resetFilters()"
-                        class="btn btn-secondary w-100">
-                    Reset
-                </button>
+                        class="btn btn-outline-secondary w-100">Reset</button>
             </div>
-        </div>
-        <div class="mt-2">
-            <small class="text-muted">
-                Showing <span id="result-count">{{ services|length }}</span>
-                of {{ services|length }} services
-            </small>
+            <div class="col-md-1 text-end">
+                <small class="text-muted">
+                    <span id="result-count">{{ services|length }}</span>
+                </small>
+            </div>
         </div>
     </div>
 </div>
 
 {% if services %}
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Bike Number</th>
-            <th>Owner</th>
-            <th>Service Type</th>
-            <th>Cost</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody id="services-body">
-        {% for s in services %}
-        <tr class="service-row"
-            data-bike="{{ s.bike.bike_number | lower }}"
-            data-status="{{ s.status }}"
-            data-date="{{ s.service_date.strftime('%Y-%m-%d') }}">
-            <td>{{ loop.index }}</td>
-            <td>{{ s.bike.bike_number }}</td>
-            <td>{{ s.bike.customer.name }}</td>
-            <td>{{ s.service_type }}</td>
-            <td>₹{{ s.cost }}</td>
-            <td>
-                {% if s.status == 'completed' %}
-                    <span class="badge bg-success">Completed</span>
-                {% else %}
-                    <span class="badge bg-warning text-dark">Pending</span>
-                {% endif %}
-            </td>
-            <td>{{ s.service_date.strftime('%d-%m-%Y') }}</td>
-            <td>
-                <a href="/services/{{ s.id }}"
-                   class="btn btn-sm btn-info">View</a>
-                {% if s.status == 'pending' %}
-                <form action="/services/complete/{{ s.id }}"
-                      method="POST" style="display:inline">
-                    <button class="btn btn-sm btn-success">Done</button>
-                </form>
-                {% endif %}
-                {% if s.status == 'completed' %}
-                <a href="/billing/create/{{ s.id }}"
-                   class="btn btn-sm btn-primary">Bill</a>
-                {% endif %}
-                <form action="/services/delete/{{ s.id }}"
-                      method="POST" style="display:inline">
-                    <button onclick="return confirm('Delete?')"
-                            class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Bike & Owner</th>
+                    <th>Service Type</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="services-body">
+                {% for s in services %}
+                <tr class="service-row"
+                    data-bike="{{ s.bike.bike_number | lower }}"
+                    data-status="{{ s.status }}"
+                    data-date="{{ s.service_date.strftime('%Y-%m-%d') }}">
+                    <td style="color:#888;font-size:13px;">{{ loop.index }}</td>
+                    <td>
+                        <div style="font-weight:700;font-size:14px;">
+                            {{ s.bike.bike_number }}
+                        </div>
+                        <div style="font-size:12px;color:#888;">
+                            {{ s.bike.customer.name }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size:13px;font-weight:500;">
+                            {{ s.service_type }}
+                        </div>
+                        {% if s.description %}
+                        <div style="font-size:11px;color:#888;">
+                            {{ s.description[:40] }}...
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="font-weight:600;color:#534AB7;">₹{{ s.cost }}</td>
+                    <td>
+                        {% if s.status == 'completed' %}
+                            <span class="badge"
+                                  style="background:#4CAF82;">Completed</span>
+                        {% else %}
+                            <span class="badge"
+                                  style="background:#F4A435;color:white;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:12px;color:#888;">
+                        {{ s.service_date.strftime('%d-%m-%Y') }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="/services/{{ s.id }}"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                            {% if s.status == 'pending' %}
+                            <form action="/services/complete/{{ s.id }}"
+                                  method="POST" style="display:inline">
+                                <button class="btn btn-sm btn-outline-success">
+                                    Done
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if s.status == 'completed' %}
+                            <a href="/billing/create/{{ s.id }}"
+                               class="btn btn-sm btn-outline-secondary">Bill</a>
+                            {% endif %}
+                            <form action="/services/delete/{{ s.id }}"
+                                  method="POST" style="display:inline">
+                                <button onclick="return confirm('Delete?')"
+                                        class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-<!-- No results message -->
-<div id="no-results" class="alert alert-info" style="display:none;">
-    No services found matching your search!
+        <div id="no-results" class="text-center py-4 text-muted"
+             style="display:none;">
+            No services found matching your search!
+        </div>
+    </div>
 </div>
 
 {% else %}
-<div class="alert alert-info">
-    No services yet. Create your first service!
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div style="font-size:48px;margin-bottom:16px;">🔧</div>
+        <h5 class="text-muted">No services yet</h5>
+        <p class="text-muted mb-3">Create your first service record!</p>
+        <a href="/services/add" class="btn btn-primary">+ New Service</a>
+    </div>
 </div>
 {% endif %}
 
 <script>
-const bikeInput     = document.getElementById('search-bike');
-const statusInput   = document.getElementById('search-status');
-const dateInput     = document.getElementById('search-date');
-const resultCount   = document.getElementById('result-count');
-const noResults     = document.getElementById('no-results');
+const bikeInput   = document.getElementById('search-bike');
+const statusInput = document.getElementById('search-status');
+const dateInput   = document.getElementById('search-date');
+const resultCount = document.getElementById('result-count');
+const noResults   = document.getElementById('no-results');
 
 function filterServices() {
-    const bikeQuery   = bikeInput.value.toLowerCase().trim();
-    const statusQuery = statusInput.value.toLowerCase().trim();
-    const dateQuery   = dateInput.value.trim();
-    const rows        = document.querySelectorAll('.service-row');
-
-    let visibleCount = 0;
+    const bikeQ   = bikeInput.value.toLowerCase().trim();
+    const statusQ = statusInput.value.trim();
+    const dateQ   = dateInput.value.trim();
+    const rows    = document.querySelectorAll('.service-row');
+    let visible   = 0;
 
     rows.forEach(row => {
         const bike   = row.getAttribute('data-bike');
         const status = row.getAttribute('data-status');
         const date   = row.getAttribute('data-date');
 
-        const bikeMatch   = bike.includes(bikeQuery);
-        const statusMatch = statusQuery === '' || status === statusQuery;
-        const dateMatch   = dateQuery === ''   || date === dateQuery;
+        const bikeMatch   = bike.includes(bikeQ);
+        const statusMatch = statusQ === '' || status === statusQ;
+        const dateMatch   = dateQ === ''   || date === dateQ;
 
         if (bikeMatch && statusMatch && dateMatch) {
-            row.style.display = '';
-            visibleCount++;
+            row.style.display = ''; visible++;
         } else {
             row.style.display = 'none';
         }
     });
 
-    resultCount.textContent = visibleCount;
-    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    resultCount.textContent = visible;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
 }
 
 function resetFilters() {
     bikeInput.value   = '';
     statusInput.value = '';
     dateInput.value   = '';
-    filterServices();
+    document.querySelectorAll('.service-row').forEach(r => r.style.display = '');
+    resultCount.textContent = document.querySelectorAll('.service-row').length;
+    noResults.style.display = 'none';
 }
 
 bikeInput.addEventListener('input',    filterServices);
@@ -161,5 +194,3 @@ dateInput.addEventListener('change',   filterServices);
 </script>
 
 {% endblock %}
-
-

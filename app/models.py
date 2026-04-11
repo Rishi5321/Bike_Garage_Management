@@ -113,6 +113,42 @@ class InventoryLog(db.Model):
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
     part        = db.relationship('SparePart', backref='logs')
 
+
+# Changes============================================================================
+
+class PurchaseOrder(db.Model):
+    __tablename__ = 'purchase_orders'
+    id               = db.Column(db.Integer, primary_key=True)
+    po_number        = db.Column(db.String(20), unique=True, nullable=False)
+    supplier_name    = db.Column(db.String(100), nullable=False)
+    supplier_phone   = db.Column(db.String(15))
+    supplier_address = db.Column(db.String(200))
+    status           = db.Column(db.String(20), default='pending')
+    notes            = db.Column(db.Text)
+    total_amount     = db.Column(db.Float, default=0.0)
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    items            = db.relationship('PurchaseOrderItem',
+                                       backref='purchase_order',
+                                       lazy=True,
+                                       cascade='all, delete-orphan')
+
+
+class PurchaseOrderItem(db.Model):
+    __tablename__ = 'purchase_order_items'
+    id          = db.Column(db.Integer, primary_key=True)
+    po_id       = db.Column(db.Integer, db.ForeignKey('purchase_orders.id'),
+                            nullable=False)
+    part_id     = db.Column(db.Integer, db.ForeignKey('spare_parts.id'),
+                            nullable=True)
+    part_name   = db.Column(db.String(100), nullable=False)
+    quantity    = db.Column(db.Integer, nullable=False)
+    unit_price  = db.Column(db.Float, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
+    part        = db.relationship('SparePart')
+
+# ===========================================================================================
+
 @login.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+    

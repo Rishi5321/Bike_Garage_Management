@@ -1,51 +1,173 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Bills</h2>
+    <div>
+        <h2 class="mb-0">Billing</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            {{ bills|length }} total bills generated
+        </p>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" id="search-customer"
+                       class="form-control"
+                       placeholder="Search by customer name...">
+            </div>
+            <div class="col-md-3">
+                <select id="search-status" class="form-select">
+                    <option value="">-- All Status --</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button onclick="resetFilters()"
+                        class="btn btn-outline-secondary w-100">Reset</button>
+            </div>
+            <div class="col-md-3 text-end">
+                <small class="text-muted">
+                    Showing <span id="result-count">{{ bills|length }}</span>
+                    of {{ bills|length }} bills
+                </small>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if bills %}
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>#</th>
-            <th>Bill ID</th>
-            <th>Customer</th>
-            <th>Bike</th>
-            <th>Service</th>
-            <th>Total (₹)</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for b in bills %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>#{{ b.id }}</td>
-            <td>{{ b.service.bike.customer.name }}</td>
-            <td>{{ b.service.bike.bike_number }}</td>
-            <td>{{ b.service.service_type }}</td>
-            <td>₹{{ b.total_amount }}</td>
-            <td>
-                {% if b.paid %}
-                    <span class="badge bg-success">Paid</span>
-                {% else %}
-                    <span class="badge bg-danger">Unpaid</span>
-                {% endif %}
-            </td>
-            <td>{{ b.created_at.strftime('%d-%m-%Y') }}</td>
-            <td>
-                <a href="/billing/{{ b.id }}" class="btn btn-sm btn-info">View</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Invoice</th>
+                    <th>Customer & Bike</th>
+                    <th>Service</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="bills-body">
+                {% for b in bills %}
+                <tr class="bill-row"
+                    data-customer="{{ b.service.bike.customer.name | lower }}"
+                    data-status="{{ 'paid' if b.paid else 'unpaid' }}">
+                    <td style="color:#888;font-size:13px;">{{ loop.index }}</td>
+                    <td>
+                        <span style="font-weight:700;color:#534AB7;font-size:14px;">
+                            #BG{{ '%04d' % b.id }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight:600;font-size:14px;">
+                            {{ b.service.bike.customer.name }}
+                        </div>
+                        <div style="font-size:12px;color:#888;">
+                            {{ b.service.bike.bike_number }} —
+                            {{ b.service.bike.bike_model }}
+                        </div>
+                    </td>
+                    <td style="font-size:13px;">{{ b.service.service_type }}</td>
+                    <td>
+                        <span style="font-weight:700;font-size:15px;color:#1E2D40;">
+                            ₹{{ b.total_amount }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if b.paid %}
+                            <span class="badge"
+                                  style="background:#4CAF82;">Paid</span>
+                        {% else %}
+                            <span class="badge"
+                                  style="background:#E05555;">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:12px;color:#888;">
+                        {{ b.created_at.strftime('%d-%m-%Y') }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="/billing/{{ b.id }}"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="/billing/pdf/{{ b.id }}"
+                               class="btn btn-sm btn-outline-danger">PDF</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="no-results" class="text-center py-4 text-muted"
+             style="display:none;">
+            No bills found matching your search!
+        </div>
+    </div>
+</div>
+
 {% else %}
-<div class="alert alert-info">No bills yet!</div>
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div style="font-size:48px;margin-bottom:16px;">🧾</div>
+        <h5 class="text-muted">No bills generated yet</h5>
+        <p class="text-muted mb-3">
+            Complete a service and generate your first bill!
+        </p>
+        <a href="/services" class="btn btn-primary">View Services</a>
+    </div>
+</div>
 {% endif %}
+
+<script>
+const customerInput = document.getElementById('search-customer');
+const statusInput   = document.getElementById('search-status');
+const resultCount   = document.getElementById('result-count');
+const noResults     = document.getElementById('no-results');
+
+function filterBills() {
+    const customerQ = customerInput.value.toLowerCase().trim();
+    const statusQ   = statusInput.value.trim();
+    const rows      = document.querySelectorAll('.bill-row');
+    let visible     = 0;
+
+    rows.forEach(row => {
+        const customer = row.getAttribute('data-customer');
+        const status   = row.getAttribute('data-status');
+
+        const customerMatch = customer.includes(customerQ);
+        const statusMatch   = statusQ === '' || status === statusQ;
+
+        if (customerMatch && statusMatch) {
+            row.style.display = ''; visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    resultCount.textContent = visible;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function resetFilters() {
+    customerInput.value = '';
+    statusInput.value   = '';
+    document.querySelectorAll('.bill-row').forEach(r => r.style.display = '');
+    resultCount.textContent = document.querySelectorAll('.bill-row').length;
+    noResults.style.display = 'none';
+}
+
+customerInput.addEventListener('input',  filterBills);
+statusInput.addEventListener('change',   filterBills);
+</script>
 
 {% endblock %}

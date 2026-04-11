@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
@@ -108,6 +109,27 @@ def monthly_revenue():
     return render_template('dashboard/monthly_revenue.html',
                            monthly=monthly,
                            month_names=month_names)
+
+
+
+@dashboard.route('/revenue-history-data')
+@login_required
+def revenue_history_data():
+    from flask import jsonify
+    from sqlalchemy import func
+
+    daily = db.session.query(
+        func.date(Bill.created_at).label('date'),
+        func.sum(Bill.total_amount).label('total')
+    ).filter(Bill.paid == True).group_by(
+        func.date(Bill.created_at)
+    ).order_by(func.date(Bill.created_at).desc()).limit(7).all()
+
+    daily   = list(reversed(daily))
+    labels  = [str(d.date) for d in daily]
+    values  = [float(d.total) for d in daily]
+
+    return jsonify({ 'labels': labels, 'values': values })
 # from flask import Blueprint, render_template
 
 # @dashboard.route('/')

@@ -8,46 +8,175 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark px-4">
-        <a class="navbar-brand fw-bold" href="/">🔧 Bike Garage</a>
-        
 
-        <div>
-            <!-- <a href="/" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
-            <a href="/customers" class="btn btn-outline-light btn-sm me-2">Customers</a>
-            <a href="/bikes" class="btn btn-outline-light btn-sm me-2">Bikes</a>
-            <a href="/services" class="btn btn-outline-light btn-sm me-2">Services</a>
-            <a href="/inventory" class="btn btn-outline-light btn-sm me-2">Inventory</a>
-            <a href="/billing" class="btn btn-outline-light btn-sm">Billing</a> -->
-            <a href="/" class="btn btn-sm me-2 {% if request.path == '/' %}btn-light{% else %}btn-outline-light{% endif %}">Dashboard</a>
-        <a href="/customers" class="btn btn-sm me-2 {% if request.path.startswith('/customers') %}btn-light{% else %}btn-outline-light{% endif %}">Customers</a>
-        <a href="/bikes" class="btn btn-sm me-2 {% if request.path.startswith('/bikes') %}btn-light{% else %}btn-outline-light{% endif %}">Bikes</a>
-        <a href="/services" class="btn btn-sm me-2 {% if request.path.startswith('/services') %}btn-light{% else %}btn-outline-light{% endif %}">Services</a>
-        <a href="/inventory" class="btn btn-sm me-2 {% if request.path.startswith('/inventory') %}btn-light{% else %}btn-outline-light{% endif %}">Inventory</a>
-        <a href="/billing" class="btn btn-sm {% if request.path.startswith('/billing') %}btn-light{% else %}btn-outline-light{% endif %}">Billing</a>
-        <a href="/fault-detection" class="btn btn-sm me-2 {% if request.path.startswith('/fault-detection') %}btn-light{% else %}btn-outline-light{% endif %}">AI Faults</a>
-        <a href="/due-services" class="btn btn-sm me-2 {% if request.path.startswith('/due-services') %}btn-light{% else %}btn-outline-light{% endif %}">Due Services</a>
-        <a href="/ai-inventory" class="btn btn-sm me-2 {% if request.path.startswith('/ai-inventory') %}btn-light{% else %}btn-outline-light{% endif %}">AI Stock</a>
-        <a href="/chatbot" class="btn btn-sm me-2 {% if request.path.startswith('/chatbot') %}btn-light{% else %}btn-outline-light{% endif %}">AI Chat</a>
-        <a href="/logout" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
-    </div>
+<div class="wrapper">
+
+    <!-- ── SIDEBAR ── -->
+    <nav id="sidebar">
+     <!-- Brand -->
+        <div class="sidebar-brand">
+            <span class="brand-icon">🔧</span>
+            <span class="brand-name">Bike Garage</span>
+        </div>
+
+
+        <!-- Owner Info -->
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                {{ current_user.username[0].upper() }}
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ current_user.username }}</div>
+                <div class="user-role">Garage Owner</div>
+            </div>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Nav Links -->
+        <ul class="sidebar-nav">
+
+            <!-- Dashboard -->
+            <li class="nav-item">
+                <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+            </li>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-group-label">Management</div>
+
+            <li class="nav-item">
+                <a href="/customers" class="nav-link {% if request.path.startswith('/customers') %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">Customers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/bikes" class="nav-link {% if request.path.startswith('/bikes') %}active{% endif %}">
+                    <span class="nav-icon">🏍️</span>
+                    <span class="nav-label">Bikes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/services" class="nav-link {% if request.path.startswith('/services') and not request.path.startswith('/fault-detection') and not request.path.startswith('/due-services') and not request.path.startswith('/chatbot') %}active{% endif %}">
+                    <span class="nav-icon">🔩</span>
+                    <span class="nav-label">Services</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/billing" class="nav-link {% if request.path.startswith('/billing') %}active{% endif %}">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-label">Billing</span>
+                </a>
+            </li>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-group-label">Inventory</div>
+
+            <li class="nav-item">
+                <a href="/inventory" class="nav-link {% if request.path.startswith('/inventory') and not request.path.startswith('/ai-inventory') %}active{% endif %}">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-label">Inventory</span>
+                    {% set low = namespace(count=0) %}
+                    {% if low_stock_count is defined and low_stock_count > 0 %}
+                    <span class="nav-badge">{{ low_stock_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/purchase-orders" class="nav-link {% if request.path.startswith('/purchase-orders') %}active{% endif %}">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-label">Purchase Orders</span>
+                </a>
+            </li>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-group-label">AI Features</div>
+
+            <li class="nav-item">
+                <a href="/fault-detection" class="nav-link {% if request.path.startswith('/fault-detection') %}active{% endif %}">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">AI Fault Detection</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/due-services" class="nav-link {% if request.path.startswith('/due-services') %}active{% endif %}">
+                    <span class="nav-icon">🔔</span>
+                    <span class="nav-label">Due Services</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/chatbot" class="nav-link {% if request.path.startswith('/chatbot') %}active{% endif %}">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">AI Chatbot</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/ai-inventory" class="nav-link {% if request.path.startswith('/ai-inventory') %}active{% endif %}">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-label">AI Stock Control</span>
+                </a>
+            </li>
+
+            <div class="sidebar-divider"></div>
+
+            <!-- Logout -->
+            <li class="nav-item">
+                <a href="/logout" class="nav-link nav-link-logout">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-label">Logout</span>
+                </a>
+            </li>
+
+        </ul>
     </nav>
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+    <!-- ── MAIN CONTENT ── -->
+    <div id="main-content">
 
-        {% block content %}{% endblock %}
+        <!-- Top bar -->
+        <div class="topbar">
+            <button id="sidebar-toggle" onclick="toggleSidebar()">
+                ☰
+            </button>
+            <!-- <div class="topbar-title">
+                Bike Garage Management System
+            </div> -->
+            <div class="topbar-right">
+                <span class="topbar-date">
+                    {{ now.strftime('%d %B %Y') if now is defined else '' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('main-content').classList.toggle('expanded');
+}
+</script>
 </body>
 </html>

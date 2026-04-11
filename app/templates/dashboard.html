@@ -1,132 +1,167 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Dashboard</h2>
-    <span class="text-muted">{{ today.strftime('%d %B %Y') }}</span>
-</div>
-<!-- <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Dashboard</h2>
-    <div class="d-flex align-items-center gap-3">
-        <span class="text-muted">{{ today.strftime('%d %B %Y') }}</span>
-        <a href="/revenue-history" class="btn btn-dark btn-sm">
-            Revenue History
-        </a>
+    <div>
+        <h2 class="mb-0">Dashboard</h2>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            Welcome back, {{ current_user.username }}! Here is your garage summary.
+        </p>
     </div>
-</div> -->
+    <div class="d-flex gap-2">
+        <a href="/revenue-history" class="btn btn-outline-secondary btn-sm">Daily Revenue</a>
+        <a href="/monthly-revenue" class="btn btn-outline-secondary btn-sm">Monthly Report</a>
+    </div>
+</div>
 
-<!-- Stat Cards -->
+<!-- Stat Cards Row -->
 <div class="row g-3 mb-4">
+
     <div class="col-md-3">
-        <div class="card text-center border-0 bg-primary text-white">
-            <div class="card-body">
-                <h3 class="fw-bold">₹{{ today_revenue }}</h3>
-                <p class="mb-0">Today's Revenue</p>
-                <!-- <a href="/revenue-history" class="btn btn-sm btn-light mt-2">
-                View History
-            </a> -->
+        <div class="stat-card" style="border-left: 4px solid #534AB7;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Today's Revenue</div>
+                    <div class="stat-value" style="color:#534AB7;">₹{{ today_revenue }}</div>
+                </div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#EEF2FF;
+                            display:flex;align-items:center;justify-content:center;font-size:20px;">
+                    💰
+                </div>
+            </div>
+            <div class="mt-2" style="font-size:12px;color:#888;">
+                Total paid: ₹{{ total_revenue }}
             </div>
         </div>
     </div>
 
-     <div class="col-md-3">
-    <div class="card text-center border-0 bg-success text-white">
-        <div class="card-body">
-            <h3 class="fw-bold">₹{{ total_revenue }}</h3>
-            <p class="mb-0">Total Revenue</p>
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left: 4px solid #4CAF82;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Customers</div>
+                    <div class="stat-value" style="color:#4CAF82;">{{ total_customers }}</div>
+                </div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#EDFAF3;
+                            display:flex;align-items:center;justify-content:center;font-size:20px;">
+                    👥
+                </div>
+            </div>
+            <div class="mt-2" style="font-size:12px;color:#888;">
+                {{ total_bikes }} bikes registered
+            </div>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left: 4px solid #F4A435;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Pending Services</div>
+                    <div class="stat-value" style="color:#F4A435;">{{ pending_services }}</div>
+                </div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#FFF8ED;
+                            display:flex;align-items:center;justify-content:center;font-size:20px;">
+                    🔧
+                </div>
+            </div>
+            <div class="mt-2" style="font-size:12px;color:#888;">
+                Awaiting completion
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card" style="border-left: 4px solid #E05555;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Low Stock Alerts</div>
+                    <div class="stat-value" style="color:#E05555;">{{ low_stock_parts|length }}</div>
+                </div>
+                <div style="width:44px;height:44px;border-radius:10px;background:#FFEDED;
+                            display:flex;align-items:center;justify-content:center;font-size:20px;">
+                    📦
+                </div>
+            </div>
+            <div class="mt-2" style="font-size:12px;color:#888;">
+                Parts need restocking
+            </div>
+        </div>
+    </div>
+
 </div>
 
-
-    <div class="col-md-3">
-        <div class="card text-center border-0 bg-success text-white">
-            <div class="card-body">
-                <h3 class="fw-bold">{{ total_customers }}</h3>
-                <p class="mb-0">Total Customers</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center border-0 bg-info text-white">
-            <div class="card-body">
-                <h3 class="fw-bold">{{ total_bikes }}</h3>
-                <p class="mb-0">Registered Bikes</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center border-0 bg-warning text-dark">
-            <div class="card-body">
-                <h3 class="fw-bold">{{ pending_services }}</h3>
-                <p class="mb-0">Pending Services</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-    <div class="card text-center border-0 text-white h-100"
-         style="background:#534AB7;">
-        <div class="card-body d-flex flex-column justify-content-center">
-            <h3 class="fw-bold">₹{{ total_revenue }}</h3>
-            <p class="mb-2">Total Revenue</p>
-            <a href="/revenue-history"
-               class="btn btn-sm btn-light mt-1">
-                View Daily  History
-            </a>
-            <a href="/monthly-revenue"
-                   class="btn btn-sm btn-light">
-                    View Monthly
-                </a>
-        </div>
-    </div>
-</div>
-</div>
-
-   
-
-<!-- Low Stock Alert -->
+<!-- Low Stock Alert Banner -->
 {% if low_stock_parts %}
-<div class="alert alert-danger mb-4">
-    <strong>Low Stock Alert!</strong>
-    {% for p in low_stock_parts %}
-        <span class="badge bg-danger me-1">{{ p.name }} ({{ p.stock }} left)</span>
-    {% endfor %}
-    <a href="/inventory" class="btn btn-sm btn-outline-danger ms-2">Manage Inventory</a>
+<div class="alert mb-4" style="background:#FFF3CD;border-left:4px solid #F4A435;
+     border-radius:10px;padding:14px 18px;">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <strong style="color:#854F0B;">⚠ Low Stock Alert!</strong>
+            <span style="font-size:13px;color:#666;margin-left:8px;">
+                {% for p in low_stock_parts %}
+                <span class="badge me-1" style="background:#F4A435;color:white;">
+                    {{ p.name }} ({{ p.stock }} left)
+                </span>
+                {% endfor %}
+            </span>
+        </div>
+        <a href="/inventory" class="btn btn-sm btn-warning">Manage Stock</a>
+    </div>
 </div>
 {% endif %}
 
-<div class="row g-3">
+<!-- Main Content Row -->
+<div class="row g-3 mb-4">
+
     <!-- Recent Services -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-dark text-white d-flex justify-content-between">
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                 style="background:#1E2D40;color:white;">
                 <strong>Recent Services</strong>
-                <a href="/services" class="btn btn-sm btn-outline-light">View All</a>
+                <a href="/services" class="btn btn-sm"
+                   style="background:rgba(255,255,255,0.15);color:white;font-size:12px;">
+                    View All
+                </a>
             </div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Bike</th>
+                            <th>Customer</th>
                             <th>Service</th>
                             <th>Status</th>
+                            <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for s in recent_services %}
                         <tr>
-                            <td>{{ s.bike.bike_number }}</td>
+                            <td><strong>{{ s.bike.bike_number }}</strong></td>
+                            <td>{{ s.bike.customer.name }}</td>
                             <td>{{ s.service_type }}</td>
                             <td>
                                 {% if s.status == 'completed' %}
-                                    <span class="badge bg-success">Done</span>
+                                    <span class="badge" style="background:#4CAF82;">Completed</span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    <span class="badge" style="background:#F4A435;color:white;">Pending</span>
                                 {% endif %}
+                            </td>
+                            <td style="font-size:12px;color:#888;">
+                                {{ s.service_date.strftime('%d-%m-%Y') }}
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if not recent_services %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">
+                                No services yet
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -134,15 +169,19 @@
     </div>
 
     <!-- Recent Bills -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-dark text-white d-flex justify-content-between">
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                 style="background:#1E2D40;color:white;">
                 <strong>Recent Bills</strong>
-                <a href="/billing" class="btn btn-sm btn-outline-light">View All</a>
+                <a href="/billing" class="btn btn-sm"
+                   style="background:rgba(255,255,255,0.15);color:white;font-size:12px;">
+                    View All
+                </a>
             </div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th>Customer</th>
                             <th>Amount</th>
@@ -153,21 +192,125 @@
                         {% for b in recent_bills %}
                         <tr>
                             <td>{{ b.service.bike.customer.name }}</td>
-                            <td>₹{{ b.total_amount }}</td>
+                            <td><strong>₹{{ b.total_amount }}</strong></td>
                             <td>
                                 {% if b.paid %}
-                                    <span class="badge bg-success">Paid</span>
+                                    <span class="badge" style="background:#4CAF82;">Paid</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Unpaid</span>
+                                    <span class="badge" style="background:#E05555;">Unpaid</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
+                        {% if not recent_bills %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">
+                                No bills yet
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
 </div>
+
+<!-- Bottom Row — Quick Actions + Revenue Chart -->
+<div class="row g-3">
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header" style="background:#1E2D40;color:white;">
+                <strong>Quick Actions</strong>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/customers/add" class="btn btn-outline-primary text-start">
+                        👥 Add New Customer
+                    </a>
+                    <a href="/bikes/add" class="btn btn-outline-success text-start">
+                        🏍️ Register New Bike
+                    </a>
+                    <a href="/services/add" class="btn btn-outline-warning text-start">
+                        🔧 Create New Service
+                    </a>
+                    <a href="/inventory/add" class="btn btn-outline-info text-start">
+                        📦 Add Spare Part
+                    </a>
+                    <a href="/purchase-orders/create" class="btn btn-outline-secondary text-start">
+                        🛒 Create Purchase Order
+                    </a>
+                    <a href="/fault-detection" class="btn btn-outline-danger text-start">
+                        🤖 AI Fault Detection
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                 style="background:#1E2D40;color:white;">
+                <strong>Revenue Overview</strong>
+                <a href="/revenue-history" class="btn btn-sm"
+                   style="background:rgba(255,255,255,0.15);color:white;font-size:12px;">
+                    Full History
+                </a>
+            </div>
+            <div class="card-body">
+                <div style="position:relative;height:220px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+fetch('/revenue-history-data')
+    .then(res => res.json())
+    .then(data => {
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: data.values,
+                    backgroundColor: '#534AB7',
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#F0F4F8' },
+                        ticks: { callback: v => '₹' + v, font: { size: 11 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    })
+    .catch(() => {
+        document.getElementById('revenueChart').parentElement.innerHTML =
+            '<p class="text-center text-muted pt-4">No revenue data yet</p>';
+    });
+</script>
 
 {% endblock %}

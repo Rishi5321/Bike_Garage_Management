@@ -23,6 +23,11 @@ def create_app():
     login.init_app(app)
     mail.init_app(app)
 
+    @app.context_processor
+    def inject_now():
+        from datetime import datetime
+        return { 'now': datetime.now() }
+
     with app.app_context():
         from app import models
 
@@ -33,6 +38,7 @@ def create_app():
     from app.routes.services  import services
     from app.routes.inventory import inventory
     from app.routes.billing   import billing
+    from app.routes.purchase_orders import purchase_orders
 
     app.register_blueprint(auth)
     app.register_blueprint(dashboard)
@@ -41,6 +47,7 @@ def create_app():
     app.register_blueprint(services)
     app.register_blueprint(inventory)
     app.register_blueprint(billing)
+    app.register_blueprint(purchase_orders)
 
     return app
 
